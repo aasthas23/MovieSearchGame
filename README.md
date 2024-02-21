@@ -1,2 +1,5 @@
-# WordPuzzleGame
-The following game takes in the txt file as input and displays the matrix, movies found from the list along with the location in the matrix and lists movies not found
+# MovieSearchGame
+A simple word search game from the matrix
+- Takes txt file as an input, reads the file and ignores all the unwanted lines
+- Stores the matrix from the file in a 2D array and list of movies into array
+- Finds the movies in the matrix and displays the movies found list (along with its location) and movies not found in the matrix
