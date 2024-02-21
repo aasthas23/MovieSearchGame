@@ -1,19 +1,9 @@
 /*
-Program: Word Search
-Name: Aastha Sheth
-Date: 02/14/2024
-Class: CS 1337.012
+Program: Movie Search
 Purpose: This program reads in a text file that has a word search grid in it and movie names to be found.
 
-The program reads this file and outputs the movie names that were found(and the direction they were found in), 
-and the also outputs the words that weren't found to the console.
-
-Changelog:
-02/14/2024-- created program, began listing required functions.
-02/15/2024-- read file data into the function and made the matrix
-02/17/2024-- created the functions to search the words in the matrix
-02/18/2024-- 
-
+The program reads this file and outputs the movie names that were found(and the location they were found in), 
+and then also displays the movies that weren't found to the console.
 */
 
 #include <iostream>
@@ -68,7 +58,8 @@ void readFileIgnoringCommentsAndSpace()
     {
         if(line.empty() || line[0] == '#')
             continue;
-
+        for(int i = 0; i < line.length(); i++)
+            line[i] = toupper(line[i]);
         matrix.push_back(line);
         lineCount++;
     }
@@ -103,6 +94,8 @@ void determineMatrixSize()
 
 void displayMatrix()
 {
+    cout << "\nMatrix Size: " << matrixRow << " X " << matrixCol << endl;
+    
     for (int i = 0; i < matrixRow; ++i)
     {
         for (int j = 0; j < matrixCol; ++j)
@@ -116,8 +109,8 @@ void displayMatrix()
 void getMatrixIntoArray()
 {
     determineMatrixSize();
-    strptr = new string*[matrixRow];
-    for (int i = 0; i < matrixRow; ++i) 
+    strptr = new string *[matrixRow];
+    for (int i = 0; i < matrixRow; ++i)
     {
         strptr[i] = new string[matrixCol];
     }
@@ -126,13 +119,13 @@ void getMatrixIntoArray()
     {
         for (int j = 0; j < matrixCol; ++j)
         {
-            strptr[i-1][j] = matrix[i][j];
+            strptr[i - 1][j] = matrix[i][j];
         }
     }
 
     displayMatrix();
-    
 }
+
 
 void getMovieNamesIntoArray()
 {
@@ -142,6 +135,27 @@ void getMovieNamesIntoArray()
     {
         movieptr[index] = matrix[i];
         index++;
+    }
+}
+
+void checkHorizontallyReversed(string &target, int &len)
+{
+    for (int i = 1; i <= matrixRow; ++i)
+    {
+        for (int j = matrixCol - 1; j >= len - 1; --j)
+        {
+            string substring = "";
+            for (int k = 0; k < len; ++k)
+            {
+                substring += matrix[i][j - k];
+            }
+            if (substring == target || substring == string(target.rbegin(), target.rend()))
+            {
+                moviesFound.push_back(target);
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
+                return;
+            }
+        }
     }
 }
 
@@ -155,28 +169,34 @@ void checkHorizontally(string &target, int &len)
             if (substring == target || substring == string(target.rbegin(), target.rend()))
             {
                 moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: E at (" + to_string(i) + "," + to_string(j+1) + ")");
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
                 return;
             }
         }
     }
-    for (int i = 1; i <= matrixRow; ++i)
+    checkHorizontallyReversed(target, len);
+}
+
+void checkVerticallyReversed(string target, int &len)
+{
+    for (int i = matrixRow; i >= len - 1; --i)
     {
-        for (int j = matrixCol - 1; j >= len - 1; --j)
+        for (int j = 0; j < matrixCol; ++j)
         {
             string substring = "";
             for (int k = 0; k < len; ++k)
             {
-                substring += matrix[i][j - k];
+                substring += matrix[i - k][j];
             }
             if (substring == target || substring == string(target.rbegin(), target.rend()))
             {
                 moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: W at (" + to_string(i) + "," + to_string(j+1) + ")");
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
                 return;
             }
         }
     }
+
 }
 
 void checkVertical(string target, int &len)
@@ -194,28 +214,12 @@ void checkVertical(string target, int &len)
             {
 
                 moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: S at (" + to_string(i) + "," + to_string(j+1) + ")");
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
                 return;
             }
         }
     }
-    for (int i = matrixRow; i >= len - 1; --i)
-    {
-        for (int j = 0; j < matrixCol; ++j)
-        {
-            string substring = "";
-            for (int k = 0; k < len; ++k)
-            {
-                substring += matrix[i - k][j];
-            }
-            if (substring == target || substring == string(target.rbegin(), target.rend()))
-            {
-                moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: N at (" + to_string(i) + "," + to_string(j+1) + ")");
-                return;
-            }
-        }
-    }
+    checkVerticallyReversed(target, len);
 }
 
 void checkDiagonalTopToBottom(string target, int &len)
@@ -234,7 +238,7 @@ void checkDiagonalTopToBottom(string target, int &len)
             {
                 //cout << substring<< endl;
                 moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: SE at (" + to_string(i) + "," + to_string(j+1) + ")");
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
                 return;
             }
         }
@@ -254,9 +258,8 @@ void checkDiagonalBottomToTop(string target, int &len)
             }
             if (substring == target || substring == string(target.rbegin(), target.rend()))
             {
-                //cout << substring << " Direction: NE at (" << to_string(i) << "," << to_string(j+1) << ")" << endl;
                 moviesFound.push_back(target);
-                directionAndCount.push_back(target + " Direction: NE at (" + to_string(i) + "," + to_string(j+1) + ")");
+                directionAndCount.push_back(to_string(i) + ", " + to_string((j+1)));
                 return;
             }
         }
@@ -277,16 +280,38 @@ void checkWord(string target)
 void skipSpaces(string target, string &sub)
 {
     for (int i = 0; i < target.length(); i++)
+    {
+        if (target[i] == ' ')
         {
-            if (target[i] == ' ')
-            {
-                continue;
-            }
-            else
-            {
-                sub += target[i];
-            }
+            continue;
         }
+        else
+        {
+            sub += target[i];
+        }
+    }
+}
+
+void displayMoviesFound()
+{
+    cout << "\nMovies Found: " << endl;
+    for (int i = 0; i < moviesFound.size(); i++)
+    {
+        if(moviesFound[i] == "")
+        {
+            continue;
+        }
+        cout << moviesFound[i] << " found at coordinates " << directionAndCount[i] << endl;
+    }
+}
+
+void displayMoviesNotFound()
+{
+    cout << "\nMovies not found: " << endl;
+    for (const string &notFound : movieNotFound)
+    {
+        cout << notFound << endl;
+    }
 }
 
 void searchMovieInMatrix()
@@ -294,6 +319,7 @@ void searchMovieInMatrix()
     int movieIndex = lineCount - (matrixRow + 1);
     getMatrixIntoArray();
     getMovieNamesIntoArray();
+
     for (int i = 0; i < movieIndex; i++)
     {
         string movie = movieptr[i];
@@ -302,28 +328,16 @@ void searchMovieInMatrix()
         skipSpaces(movie, substring);
         movie = substring;
 
-        //vector<string> directionAndCount;
         checkWord(movie);
-        cout << directionAndCount[i] << endl;
-        // Output found movies and directions
-        if (find(moviesFound.begin(), moviesFound.end(), movie) == moviesFound.end())
+
+        if (find(moviesFound.begin(), moviesFound.end(), substring) == moviesFound.end())
         {
             movieNotFound.push_back(movie);
         }
-
-        movie = movieptr[i];
     }
 
-    cout << "Movies Found: " << endl;
-    for(string movie : moviesFound)
-        cout << movie << endl;
-
-    cout << "Movies not found: " << endl;
-    for (string movie : movieNotFound)
-    {
-        cout << movie << endl;
-    }
-    
+    displayMoviesFound();
+    displayMoviesNotFound();
 }
 
 
